@@ -53,6 +53,7 @@ module Technoweenie # :nodoc:
         end
 
         extend ClassMethods unless (class << self; included_modules; end).include?(ClassMethods)
+        define_callbacks(:after_resize, :after_attachment_saved, :before_thumbnail_saved)
         include InstanceMethods unless included_modules.include?(InstanceMethods)
 
         parent_options = attachment_options || {}
@@ -456,7 +457,10 @@ module Technoweenie # :nodoc:
             notify(method)
 
             result = nil
-            callbacks_for(method).each do |callback|
+            method="#{method}_callback_chain"
+            callbacks=[]
+            callbacks=self.send(method)  if self.respond_to?(method)
+            callbacks.each do |callback|
               result = callback.call(self, arg)
               return false if result == false
             end
